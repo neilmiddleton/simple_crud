@@ -96,6 +96,212 @@
                     }
                   ]
                 }
+              },
+              {
+                "kind": "Workflow",
+                "spec": {
+                  "type": "parallel",
+                  "steps": [
+                    {
+                      "kind": "Addon",
+                      "spec": {
+                        "externalAccessEnabled": false,
+                        "type": "postgresql",
+                        "billing": {
+                          "replicas": 1,
+                          "storage": 4096,
+                          "storageClass": "ssd",
+                          "deploymentPlan": "nf-compute-50"
+                        },
+                        "tlsEnabled": true,
+                        "typeSpecificSettings": {
+                          "postgresqlConnectionPoolerReplicas": 2,
+                          "postgresqlReadConnectionPoolerReplicas": 2
+                        },
+                        "name": "pg-dev",
+                        "version": "latest"
+                      },
+                      "ref": "pg-dev"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "SecretGroup",
+                "spec": {
+                  "type": "secret",
+                  "secretType": "environment-arguments",
+                  "priority": 10,
+                  "secrets": {
+                    "variables": {},
+                    "files": {}
+                  },
+                  "addonDependencies": [
+                    {
+                      "addonId": "${refs.pg-dev.id}",
+                      "keys": [
+                        {
+                          "keyName": "POSTGRES_URI",
+                          "aliases": [
+                            "DATABASE_URL"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "name": "dev-secrets",
+                  "tags": [
+                    "dev"
+                  ],
+                  "restrictions": {
+                    "restricted": false,
+                    "nfObjects": [],
+                    "tags": []
+                  }
+                },
+                "ref": "dev-secrets"
+              },
+              {
+                "kind": "Workflow",
+                "spec": {
+                  "type": "parallel",
+                  "steps": [
+                    {
+                      "kind": "DeploymentService",
+                      "spec": {
+                        "deployment": {
+                          "instances": 1,
+                          "storage": {
+                            "ephemeralStorage": {
+                              "storageSize": 1024
+                            },
+                            "shmSize": 64
+                          },
+                          "docker": {
+                            "configType": "default"
+                          },
+                          "internal": {
+                            "id": "${refs.frontend-builder.id}",
+                            "branch": "main",
+                            "buildSHA": "latest"
+                          }
+                        },
+                        "runtimeEnvironment": {},
+                        "runtimeFiles": {},
+                        "billing": {
+                          "deploymentPlan": "nf-compute-20"
+                        },
+                        "name": "dev-frontend",
+                        "ports": [
+                          {
+                            "internalPort": 8080,
+                            "public": true,
+                            "protocol": "HTTP",
+                            "name": "p01",
+                            "domains": [],
+                            "security": {
+                              "sso": {},
+                              "policies": [],
+                              "credentials": [],
+                              "verificationMode": "or"
+                            },
+                            "disableNfDomain": false
+                          }
+                        ]
+                      },
+                      "ref": "dev-frontend"
+                    },
+                    {
+                      "kind": "DeploymentService",
+                      "spec": {
+                        "deployment": {
+                          "instances": 1,
+                          "storage": {
+                            "ephemeralStorage": {
+                              "storageSize": 1024
+                            },
+                            "shmSize": 64
+                          },
+                          "docker": {
+                            "configType": "default"
+                          },
+                          "internal": {
+                            "id": "${refs.backend-builder.id}",
+                            "branch": "main",
+                            "buildSHA": "latest"
+                          }
+                        },
+                        "runtimeEnvironment": {},
+                        "runtimeFiles": {},
+                        "billing": {
+                          "deploymentPlan": "nf-compute-20"
+                        },
+                        "name": "dev-backend",
+                        "ports": [
+                          {
+                            "internalPort": 8080,
+                            "public": true,
+                            "protocol": "HTTP",
+                            "name": "p01",
+                            "domains": [],
+                            "security": {
+                              "sso": {},
+                              "policies": [],
+                              "credentials": [],
+                              "verificationMode": "or"
+                            },
+                            "disableNfDomain": false
+                          }
+                        ]
+                      },
+                      "ref": "dev-backend"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "Workflow",
+                "spec": {
+                  "type": "parallel",
+                  "steps": [
+                    {
+                      "kind": "Pipeline",
+                      "spec": {
+                        "stages": [
+                          {
+                            "name": "Development"
+                          },
+                          {
+                            "name": "Staging"
+                          },
+                          {
+                            "name": "Production"
+                          }
+                        ],
+                        "name": "frontend-pipeline"
+                      },
+                      "ref": "frontend-pipeline"
+                    },
+                    {
+                      "kind": "Pipeline",
+                      "spec": {
+                        "stages": [
+                          {
+                            "name": "Development"
+                          },
+                          {
+                            "name": "Staging"
+                          },
+                          {
+                            "name": "Production"
+                          }
+                        ],
+                        "name": "backend-pipeline"
+                      },
+                      "ref": "backend-pipeline"
+                    }
+                  ]
+                }
               }
             ]
           }
