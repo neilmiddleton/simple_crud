@@ -123,7 +123,7 @@
                             },
                             "shmSize": 64
                           },
-                          "docker": {
+                          "buildpack": {
                             "configType": "customCommand",
                             "customCommand": "bin/rails db:migrate"
                           },
@@ -131,9 +131,6 @@
                             "id": "${refs.backend-builder.id}",
                             "branch": "main"
                           }
-                        },
-                        "runtimeEnvironment": {
-                          "PORT": "8080"
                         },
                         "runtimeFiles": {},
                         "billing": {
@@ -148,7 +145,8 @@
                           "isAllowList": false,
                           "ciIgnoreFlagsEnabled": false
                         },
-                        "buildArguments": {}
+                        "buildArguments": {},
+                        "runtimeEnvironment": {}
                       },
                       "ref": "dev-migration"
                     }
