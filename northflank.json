@@ -124,7 +124,8 @@
                             "shmSize": 64
                           },
                           "docker": {
-                            "configType": "default"
+                            "configType": "customCommand",
+                            "customCommand": "bin/rails db:migrate"
                           },
                           "internal": {
                             "id": "${refs.backend-builder.id}",
