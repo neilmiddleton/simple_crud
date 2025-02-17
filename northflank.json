@@ -30,6 +30,14 @@
             },
             "steps": [
               {
+                "kind": "ResourceTag",
+                "spec": {
+                  "name": "dev",
+                  "description": ""
+                },
+                "ref": "dev"
+              },
+              {
                 "kind": "Workflow",
                 "spec": {
                   "type": "parallel",
@@ -119,7 +127,10 @@
                           "postgresqlReadConnectionPoolerReplicas": 2
                         },
                         "name": "pg-dev",
-                        "version": "latest"
+                        "version": "latest",
+                        "tags": [
+                          "${refs.dev.id}"
+                        ]
                       },
                       "ref": "pg-dev"
                     }
@@ -151,7 +162,7 @@
                   ],
                   "name": "dev-secrets",
                   "tags": [
-                    "dev"
+                    "${refs.dev.id}"
                   ],
                   "restrictions": {
                     "restricted": false,
@@ -207,6 +218,9 @@
                             },
                             "disableNfDomain": false
                           }
+                        ],
+                        "tags": [
+                          "${refs.dev.id}"
                         ]
                       },
                       "ref": "dev-frontend"
@@ -252,6 +266,9 @@
                             },
                             "disableNfDomain": false
                           }
+                        ],
+                        "tags": [
+                          "${refs.dev.id}"
                         ]
                       },
                       "ref": "dev-backend"
