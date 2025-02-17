@@ -131,7 +131,9 @@
                             "branch": "main"
                           }
                         },
-                        "runtimeEnvironment": {},
+                        "runtimeEnvironment": {
+                          "PORT": "8080"
+                        },
                         "runtimeFiles": {},
                         "billing": {
                           "deploymentPlan": "nf-compute-20"
