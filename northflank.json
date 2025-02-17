@@ -108,6 +108,53 @@
               {
                 "kind": "Workflow",
                 "spec": {
+                  "type": "sequential",
+                  "steps": [
+                    {
+                      "kind": "ManualJob",
+                      "spec": {
+                        "runOnSourceChange": "never",
+                        "backoffLimit": 0,
+                        "activeDeadlineSeconds": 600,
+                        "deployment": {
+                          "storage": {
+                            "ephemeralStorage": {
+                              "storageSize": 1024
+                            },
+                            "shmSize": 64
+                          },
+                          "docker": {
+                            "configType": "default"
+                          },
+                          "internal": {
+                            "id": "${refs.backend-builder.id}",
+                            "branch": "main"
+                          }
+                        },
+                        "runtimeEnvironment": {},
+                        "runtimeFiles": {},
+                        "billing": {
+                          "deploymentPlan": "nf-compute-20"
+                        },
+                        "name": "dev-migration",
+                        "tags": [
+                          "${refs.dev.id}"
+                        ],
+                        "buildConfiguration": {
+                          "pathIgnoreRules": [],
+                          "isAllowList": false,
+                          "ciIgnoreFlagsEnabled": false
+                        },
+                        "buildArguments": {}
+                      },
+                      "ref": "dev-migration"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "Workflow",
+                "spec": {
                   "type": "parallel",
                   "steps": [
                     {
@@ -195,7 +242,8 @@
                             "id": "${refs.frontend-builder.id}",
                             "branch": "main",
                             "buildSHA": "latest"
-                          }
+                          },
+                          "releaseFlowControlled": true
                         },
                         "runtimeEnvironment": {},
                         "runtimeFiles": {},
@@ -243,7 +291,8 @@
                             "id": "${refs.backend-builder.id}",
                             "branch": "main",
                             "buildSHA": "latest"
-                          }
+                          },
+                          "releaseFlowControlled": true
                         },
                         "runtimeEnvironment": {},
                         "runtimeFiles": {},
@@ -417,6 +466,25 @@
                                         },
                                         "condition": "success",
                                         "ref": "templaterefsbackend-builderid-build-1"
+                                      },
+                                      {
+                                        "kind": "JobRun",
+                                        "spec": {
+                                          "jobId": "${template.refs.dev-migration.id}",
+                                          "deployment": {
+                                            "internal": {
+                                              "id": "${template.refs.backend-builder.id}",
+                                              "branch": "main",
+                                              "buildId": "latest"
+                                            },
+                                            "docker": {
+                                              "configType": "customCommand",
+                                              "customCommand": "db:migrate"
+                                            }
+                                          }
+                                        },
+                                        "condition": "success",
+                                        "ref": "templaterefsdev-migrationid-jobrun-1"
                                       },
                                       {
                                         "kind": "Release",
