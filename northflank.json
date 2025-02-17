@@ -1,0 +1,121 @@
+{
+  "apiVersion": "v1.2",
+  "spec": {
+    "kind": "Workflow",
+    "spec": {
+      "type": "sequential",
+      "steps": [
+        {
+          "kind": "Project",
+          "ref": "project",
+          "spec": {
+            "networking": {
+              "tailscale": {
+                "authKeyTags": [],
+                "enabled": false,
+                "autoRedeployOnRegeneration": false
+              },
+              "allowedIngressProjects": []
+            },
+            "name": "POC",
+            "clusterId": "sleepy-smile"
+          }
+        },
+        {
+          "kind": "Workflow",
+          "spec": {
+            "type": "sequential",
+            "context": {
+              "projectId": "${refs.project.id}"
+            },
+            "steps": [
+              {
+                "kind": "Workflow",
+                "spec": {
+                  "type": "parallel",
+                  "steps": [
+                    {
+                      "kind": "BuildService",
+                      "spec": {
+                        "buildArguments": {},
+                        "buildFiles": {},
+                        "billing": {
+                          "buildPlan": "nf-compute-400-16"
+                        },
+                        "name": "frontend-builder",
+                        "vcsData": {
+                          "projectType": "github",
+                          "accountLogin": "neilmiddleton",
+                          "projectUrl": "https://github.com/neilmiddleton/simple_crud"
+                        },
+                        "buildConfiguration": {
+                          "prRestrictions": [],
+                          "branchRestrictions": []
+                        },
+                        "buildSettings": {
+                          "buildpack": {
+                            "builder": "HEROKU_24",
+                            "buildpackLocators": [],
+                            "useCache": true,
+                            "buildContext": "/"
+                          }
+                        },
+                        "disabledCI": false
+                      },
+                      "ref": "frontend-builder"
+                    },
+                    {
+                      "kind": "BuildService",
+                      "spec": {
+                        "buildArguments": {},
+                        "buildFiles": {},
+                        "billing": {
+                          "buildPlan": "nf-compute-400-16"
+                        },
+                        "name": "backend-builder",
+                        "vcsData": {
+                          "projectType": "github",
+                          "accountLogin": "neilmiddleton",
+                          "projectUrl": "https://github.com/neilmiddleton/simple_crud"
+                        },
+                        "buildConfiguration": {
+                          "prRestrictions": [],
+                          "branchRestrictions": []
+                        },
+                        "buildSettings": {
+                          "buildpack": {
+                            "builder": "HEROKU_24",
+                            "buildpackLocators": [],
+                            "useCache": true,
+                            "buildContext": "/"
+                          }
+                        },
+                        "disabledCI": false
+                      },
+                      "ref": "backend-builder"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "name": "POC",
+  "description": "",
+  "options": {
+    "autorun": true,
+    "concurrencyPolicy": "allow",
+    "runOnUpdate": false
+  },
+  "gitops": {
+    "repoUrl": "https://github.com/neilmiddleton/simple_crud",
+    "vcsService": "github",
+    "accountLogin": "neilmiddleton",
+    "branch": "main",
+    "filePath": "/northflank.json"
+  },
+  "$schema": "https://api.northflank.com/v1/schemas/template"
+}
