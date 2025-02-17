@@ -368,7 +368,88 @@
                       "spec": {
                         "stages": [
                           {
-                            "name": "Development"
+                            "name": "Development",
+                            "nfObjects": [
+                              {
+                                "id": "${refs.dev-backend.id}",
+                                "type": "service"
+                              }
+                            ],
+                            "releaseFlow": {
+                              "kind": "ReleaseFlow",
+                              "spec": {
+                                "apiVersion": "v1.2",
+                                "spec": {
+                                  "kind": "Workflow",
+                                  "spec": {
+                                    "type": "sequential",
+                                    "steps": [
+                                      {
+                                        "kind": "Build",
+                                        "spec": {
+                                          "reuseExistingBuilds": true,
+                                          "buildRuleFallThroughHandling": "fail",
+                                          "buildOverrides": {
+                                            "buildArguments": {},
+                                            "buildFiles": {}
+                                          },
+                                          "id": "${template.refs.backend-builder.id}",
+                                          "type": "service",
+                                          "branch": "${refs.simple_crud.branch}",
+                                          "sha": "${refs.simple_crud.sha}"
+                                        },
+                                        "condition": "success",
+                                        "ref": "templaterefsbackend-builderid-build-1"
+                                      },
+                                      {
+                                        "kind": "Release",
+                                        "spec": {
+                                          "type": "build",
+                                          "origin": {
+                                            "id": "${template.refs.backend-builder.id}",
+                                            "branch": "main",
+                                            "build": "latest"
+                                          },
+                                          "target": {
+                                            "id": "${template.refs.dev-backend.id}",
+                                            "type": "service"
+                                          }
+                                        },
+                                        "ref": "templaterefsdev-backendid-release-1"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "triggers": [
+                                  {
+                                    "ref": "simple_crud",
+                                    "vcsService": "github",
+                                    "accountLogin": "neilmiddleton",
+                                    "repoUrl": "https://github.com/neilmiddleton/simple_crud",
+                                    "branchRestrictions": [
+                                      "main"
+                                    ],
+                                    "prRestrictions": [],
+                                    "pathIgnoreRules": [],
+                                    "ciIgnoreFlags": [
+                                      "[skip ci]",
+                                      "[ci skip]",
+                                      "[no ci]",
+                                      "[skip nf]",
+                                      "[nf skip]",
+                                      "[northflank skip]",
+                                      "[skip northflank]"
+                                    ],
+                                    "ciIgnoreFlagsEnabled": true,
+                                    "isAllowList": false,
+                                    "ignoreDrafts": false
+                                  }
+                                ],
+                                "options": {
+                                  "concurrencyPolicy": "allow"
+                                }
+                              }
+                            }
                           },
                           {
                             "name": "Staging"
