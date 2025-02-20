@@ -22,358 +22,307 @@
           }
         },
         {
-          "kind": "Workflow",
+          "kind": "ResourceTag",
           "spec": {
-            "type": "sequential",
-            "context": {
-              "projectId": "${refs.project.id}"
-            },
-            "steps": [
+            "name": "dev",
+            "description": ""
+          },
+          "ref": "dev"
+        },
+        {
+          "kind": "Pipeline",
+          "spec": {
+            "stages": [
               {
-                "kind": "ResourceTag",
-                "spec": {
-                  "name": "dev",
-                  "description": ""
-                },
-                "ref": "dev"
-              },
-              {
-                "kind": "Workflow",
-                "spec": {
-                  "type": "parallel",
-                  "steps": [
-                    {
-                      "kind": "BuildService",
-                      "spec": {
-                        "buildArguments": {},
-                        "buildFiles": {},
-                        "billing": {
-                          "buildPlan": "nf-compute-400-16"
-                        },
-                        "name": "backend-builder",
-                        "vcsData": {
-                          "projectType": "github",
-                          "projectUrl": "https://github.com/trade-tariff/trade-tariff-backend"
-                        },
-                        "buildConfiguration": {
-                          "prRestrictions": [],
-                          "branchRestrictions": []
-                        },
-                        "buildSettings": {
-                          "buildpack": {
-                            "builder": "HEROKU_24",
-                            "buildpackLocators": [],
-                            "useCache": true,
-                            "buildContext": "/"
-                          }
-                        },
-                        "disabledCI": false
-                      },
-                      "ref": "backend-builder"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "Workflow",
-                "spec": {
-                  "type": "sequential",
-                  "steps": [
-                    {
-                      "kind": "ManualJob",
-                      "spec": {
-                        "runOnSourceChange": "never",
-                        "backoffLimit": 0,
-                        "activeDeadlineSeconds": 600,
-                        "deployment": {
-                          "storage": {
-                            "ephemeralStorage": {
-                              "storageSize": 1024
-                            },
-                            "shmSize": 64
-                          },
-                          "buildpack": {
-                            "configType": "customCommand",
-                            "customCommand": "bin/rails db:migrate"
-                          },
-                          "internal": {
-                            "id": "${refs.backend-builder.id}",
-                            "branch": "main"
-                          }
-                        },
-                        "runtimeFiles": {},
-                        "billing": {
-                          "deploymentPlan": "nf-compute-20"
-                        },
-                        "name": "dev-migration",
-                        "tags": [
-                          "${refs.dev.id}"
-                        ],
-                        "buildConfiguration": {
-                          "pathIgnoreRules": [],
-                          "isAllowList": false,
-                          "ciIgnoreFlagsEnabled": false
-                        },
-                        "buildArguments": {},
-                        "runtimeEnvironment": {}
-                      },
-                      "ref": "dev-migration"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "Workflow",
-                "spec": {
-                  "type": "parallel",
-                  "steps": [
-                    {
-                      "kind": "Addon",
-                      "spec": {
-                        "externalAccessEnabled": false,
-                        "type": "postgresql",
-                        "billing": {
-                          "replicas": 1,
-                          "storage": 4096,
-                          "storageClass": "ssd",
-                          "deploymentPlan": "nf-compute-50"
-                        },
-                        "tlsEnabled": true,
-                        "typeSpecificSettings": {
-                          "postgresqlConnectionPoolerReplicas": 2,
-                          "postgresqlReadConnectionPoolerReplicas": 2
-                        },
-                        "name": "pg-dev",
-                        "version": "latest",
-                        "tags": [
-                          "${refs.dev.id}"
-                        ]
-                      },
-                      "ref": "pg-dev"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "SecretGroup",
-                "spec": {
-                  "type": "secret",
-                  "secretType": "environment-arguments",
-                  "priority": 10,
-                  "secrets": {
-                    "variables": {},
-                    "files": {}
-                  },
-                  "addonDependencies": [
-                    {
-                      "addonId": "${refs.pg-dev.id}",
-                      "keys": [
-                        {
-                          "keyName": "POSTGRES_URI",
-                          "aliases": [
-                            "DATABASE_URL"
-                          ]
-                        }
-                      ]
-                    }
-                  ],
-                  "name": "dev-secrets",
-                  "tags": [
-                    "${refs.dev.id}"
-                  ],
-                  "restrictions": {
-                    "restricted": false,
-                    "nfObjects": [],
-                    "tags": []
+                "name": "Development",
+                "nfObjects": [
+                  {
+                    "id": "${refs.dev-backend.id}",
+                    "type": "service"
                   }
-                },
-                "ref": "dev-secrets"
-              },
-              {
-                "kind": "Workflow",
-                "spec": {
-                  "type": "parallel",
-                  "steps": [
-                    {
-                      "kind": "DeploymentService",
+                ],
+                "releaseFlow": {
+                  "kind": "ReleaseFlow",
+                  "spec": {
+                    "apiVersion": "v1.2",
+                    "spec": {
+                      "kind": "Workflow",
                       "spec": {
-                        "deployment": {
-                          "instances": 1,
-                          "storage": {
-                            "ephemeralStorage": {
-                              "storageSize": 1024
-                            },
-                            "shmSize": 64
-                          },
-                          "docker": {
-                            "configType": "default"
-                          },
-                          "internal": {
-                            "id": "${refs.backend-builder.id}",
-                            "branch": "main",
-                            "buildSHA": "latest"
-                          },
-                          "releaseFlowControlled": true
-                        },
-                        "runtimeEnvironment": {},
-                        "runtimeFiles": {},
-                        "billing": {
-                          "deploymentPlan": "nf-compute-20"
-                        },
-                        "name": "dev-backend",
-                        "ports": [
+                        "type": "sequential",
+                        "steps": [
                           {
-                            "internalPort": 8080,
-                            "public": true,
-                            "protocol": "HTTP",
-                            "name": "p01",
-                            "domains": [],
-                            "security": {
-                              "sso": {},
-                              "policies": [],
-                              "credentials": [],
-                              "verificationMode": "or"
+                            "kind": "Build",
+                            "spec": {
+                              "reuseExistingBuilds": true,
+                              "buildRuleFallThroughHandling": "fail",
+                              "buildOverrides": {
+                                "buildArguments": {},
+                                "buildFiles": {}
+                              },
+                              "id": "${template.refs.backend-builder.id}",
+                              "type": "service",
+                              "branch": "${refs.simple_crud.branch}",
+                              "sha": "${refs.simple_crud.sha}"
                             },
-                            "disableNfDomain": false
-                          }
-                        ],
-                        "tags": [
-                          "${refs.dev.id}"
-                        ]
-                      },
-                      "ref": "dev-backend"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "Workflow",
-                "spec": {
-                  "type": "parallel",
-                  "steps": [
-                    {
-                      "kind": "Pipeline",
-                      "spec": {
-                        "stages": [
+                            "condition": "success",
+                            "ref": "templaterefsbackend-builderid-build-1"
+                          },
                           {
-                            "name": "Development",
-                            "nfObjects": [
-                              {
-                                "id": "${refs.dev-backend.id}",
-                                "type": "service"
-                              }
-                            ],
-                            "releaseFlow": {
-                              "kind": "ReleaseFlow",
-                              "spec": {
-                                "apiVersion": "v1.2",
-                                "spec": {
-                                  "kind": "Workflow",
-                                  "spec": {
-                                    "type": "sequential",
-                                    "steps": [
-                                      {
-                                        "kind": "Build",
-                                        "spec": {
-                                          "reuseExistingBuilds": true,
-                                          "buildRuleFallThroughHandling": "fail",
-                                          "buildOverrides": {
-                                            "buildArguments": {},
-                                            "buildFiles": {}
-                                          },
-                                          "id": "${template.refs.backend-builder.id}",
-                                          "type": "service",
-                                          "branch": "${refs.simple_crud.branch}",
-                                          "sha": "${refs.simple_crud.sha}"
-                                        },
-                                        "condition": "success",
-                                        "ref": "templaterefsbackend-builderid-build-1"
-                                      },
-                                      {
-                                        "kind": "JobRun",
-                                        "spec": {
-                                          "jobId": "${template.refs.dev-migration.id}",
-                                          "deployment": {
-                                            "internal": {
-                                              "id": "${template.refs.backend-builder.id}",
-                                              "branch": "main",
-                                              "buildId": "latest"
-                                            },
-                                            "docker": {
-                                              "configType": "customCommand",
-                                              "customCommand": "db:migrate"
-                                            }
-                                          }
-                                        },
-                                        "condition": "success",
-                                        "ref": "templaterefsdev-migrationid-jobrun-1"
-                                      },
-                                      {
-                                        "kind": "Release",
-                                        "spec": {
-                                          "type": "build",
-                                          "origin": {
-                                            "id": "${template.refs.backend-builder.id}",
-                                            "branch": "main",
-                                            "build": "latest"
-                                          },
-                                          "target": {
-                                            "id": "${template.refs.dev-backend.id}",
-                                            "type": "service"
-                                          }
-                                        },
-                                        "ref": "templaterefsdev-backendid-release-1"
-                                      }
-                                    ]
-                                  }
+                            "kind": "JobRun",
+                            "spec": {
+                              "jobId": "${template.refs.dev-migration.id}",
+                              "deployment": {
+                                "internal": {
+                                  "id": "${template.refs.backend-builder.id}",
+                                  "branch": "main",
+                                  "buildId": "latest"
                                 },
-                                "triggers": [
-                                  {
-                                    "ref": "simple_crud",
-                                    "vcsService": "github",
-                                    "accountLogin": "neilmiddleton",
-                                    "repoUrl": "https://github.com/neilmiddleton/simple_crud",
-                                    "branchRestrictions": [
-                                      "main"
-                                    ],
-                                    "prRestrictions": [],
-                                    "pathIgnoreRules": [],
-                                    "ciIgnoreFlags": [
-                                      "[skip ci]",
-                                      "[ci skip]",
-                                      "[no ci]",
-                                      "[skip nf]",
-                                      "[nf skip]",
-                                      "[northflank skip]",
-                                      "[skip northflank]"
-                                    ],
-                                    "ciIgnoreFlagsEnabled": true,
-                                    "isAllowList": false,
-                                    "ignoreDrafts": false
-                                  }
-                                ],
-                                "options": {
-                                  "concurrencyPolicy": "allow"
+                                "docker": {
+                                  "configType": "customCommand",
+                                  "customCommand": "db:migrate"
                                 }
                               }
-                            }
+                            },
+                            "condition": "success",
+                            "ref": "templaterefsdev-migrationid-jobrun-1"
                           },
                           {
-                            "name": "Staging"
-                          },
-                          {
-                            "name": "Production"
+                            "kind": "Release",
+                            "spec": {
+                              "type": "build",
+                              "origin": {
+                                "id": "${template.refs.backend-builder.id}",
+                                "branch": "main",
+                                "build": "latest"
+                              },
+                              "target": {
+                                "id": "${template.refs.dev-backend.id}",
+                                "type": "service"
+                              }
+                            },
+                            "ref": "templaterefsdev-backendid-release-1"
                           }
+                        ]
+                      }
+                    },
+                    "triggers": [
+                      {
+                        "ref": "simple_crud",
+                        "vcsService": "github",
+                        "accountLogin": "neilmiddleton",
+                        "repoUrl": "https://github.com/neilmiddleton/simple_crud",
+                        "branchRestrictions": [
+                          "main"
                         ],
-                        "name": "backend-pipeline"
-                      },
-                      "ref": "backend-pipeline"
+                        "prRestrictions": [],
+                        "pathIgnoreRules": [],
+                        "ciIgnoreFlags": [
+                          "[skip ci]",
+                          "[ci skip]",
+                          "[no ci]",
+                          "[skip nf]",
+                          "[nf skip]",
+                          "[northflank skip]",
+                          "[skip northflank]"
+                        ],
+                        "ciIgnoreFlagsEnabled": true,
+                        "isAllowList": false,
+                        "ignoreDrafts": false
+                      }
+                    ],
+                    "options": {
+                      "concurrencyPolicy": "allow"
                     }
-                  ]
+                  }
                 }
+              },
+              {
+                "name": "Staging"
+              },
+              {
+                "name": "Production"
               }
+            ],
+            "name": "backend-pipeline"
+          },
+          "ref": "backend-pipeline"
+        },
+        {
+          "kind": "DeploymentService",
+          "spec": {
+            "deployment": {
+              "instances": 1,
+              "storage": {
+                "ephemeralStorage": {
+                  "storageSize": 1024
+                },
+                "shmSize": 64
+              },
+              "docker": {
+                "configType": "default"
+              },
+              "internal": {
+                "id": "${refs.backend-builder.id}",
+                "branch": "main",
+                "buildSHA": "latest"
+              },
+              "releaseFlowControlled": true
+            },
+            "runtimeEnvironment": {},
+            "runtimeFiles": {},
+            "billing": {
+              "deploymentPlan": "nf-compute-20"
+            },
+            "name": "dev-backend",
+            "ports": [
+              {
+                "internalPort": 8080,
+                "public": true,
+                "protocol": "HTTP",
+                "name": "p01",
+                "domains": [],
+                "security": {
+                  "sso": {},
+                  "policies": [],
+                  "credentials": [],
+                  "verificationMode": "or"
+                },
+                "disableNfDomain": false
+              }
+            ],
+            "tags": [
+              "${refs.dev.id}"
             ]
-          }
+          },
+          "ref": "dev-backend"
+        },
+        {
+          "kind": "Addon",
+          "spec": {
+            "externalAccessEnabled": false,
+            "type": "postgresql",
+            "billing": {
+              "replicas": 1,
+              "storage": 4096,
+              "storageClass": "ssd",
+              "deploymentPlan": "nf-compute-50"
+            },
+            "tlsEnabled": true,
+            "typeSpecificSettings": {
+              "postgresqlConnectionPoolerReplicas": 2,
+              "postgresqlReadConnectionPoolerReplicas": 2
+            },
+            "name": "pg-dev",
+            "version": "latest",
+            "tags": [
+              "${refs.dev.id}"
+            ]
+          },
+          "ref": "pg-dev"
+        },
+        {
+          "kind": "ManualJob",
+          "spec": {
+            "runOnSourceChange": "never",
+            "backoffLimit": 0,
+            "activeDeadlineSeconds": 600,
+            "deployment": {
+              "storage": {
+                "ephemeralStorage": {
+                  "storageSize": 1024
+                },
+                "shmSize": 64
+              },
+              "buildpack": {
+                "configType": "customCommand",
+                "customCommand": "bin/rails db:migrate"
+              },
+              "internal": {
+                "id": "${refs.backend-builder.id}",
+                "branch": "main"
+              }
+            },
+            "runtimeFiles": {},
+            "billing": {
+              "deploymentPlan": "nf-compute-20"
+            },
+            "name": "dev-migration",
+            "tags": [
+              "${refs.dev.id}"
+            ],
+            "buildConfiguration": {
+              "pathIgnoreRules": [],
+              "isAllowList": false,
+              "ciIgnoreFlagsEnabled": false
+            },
+            "buildArguments": {},
+            "runtimeEnvironment": {}
+          },
+          "ref": "dev-migration"
+        },
+        {
+          "kind": "BuildService",
+          "spec": {
+            "buildArguments": {},
+            "buildFiles": {},
+            "billing": {
+              "buildPlan": "nf-compute-400-16"
+            },
+            "name": "backend-builder",
+            "vcsData": {
+              "projectType": "github",
+              "projectUrl": "https://github.com/trade-tariff/trade-tariff-backend"
+            },
+            "buildConfiguration": {
+              "prRestrictions": [],
+              "branchRestrictions": []
+            },
+            "buildSettings": {
+              "buildpack": {
+                "builder": "HEROKU_24",
+                "buildpackLocators": [],
+                "useCache": true,
+                "buildContext": "/"
+              }
+            },
+            "disabledCI": false
+          },
+          "ref": "backend-builder"
+        },
+        {
+          "kind": "SecretGroup",
+          "spec": {
+            "type": "secret",
+            "secretType": "environment-arguments",
+            "priority": 10,
+            "secrets": {
+              "variables": {},
+              "files": {}
+            },
+            "addonDependencies": [
+              {
+                "addonId": "${refs.pg-dev.id}",
+                "keys": [
+                  {
+                    "keyName": "POSTGRES_URI",
+                    "aliases": [
+                      "DATABASE_URL"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "name": "dev-secrets",
+            "tags": [
+              "${refs.dev.id}"
+            ],
+            "restrictions": {
+              "restricted": false,
+              "nfObjects": [],
+              "tags": []
+            }
+          },
+          "ref": "dev-secrets"
         }
       ]
     }
