@@ -50,36 +50,6 @@
                         "billing": {
                           "buildPlan": "nf-compute-400-16"
                         },
-                        "name": "frontend-builder",
-                        "vcsData": {
-                          "projectType": "github",
-                          "accountLogin": "neilmiddleton",
-                          "projectUrl": "https://github.com/neilmiddleton/simple_crud"
-                        },
-                        "buildConfiguration": {
-                          "prRestrictions": [],
-                          "branchRestrictions": []
-                        },
-                        "buildSettings": {
-                          "buildpack": {
-                            "builder": "HEROKU_24",
-                            "buildpackLocators": [],
-                            "useCache": true,
-                            "buildContext": "/"
-                          }
-                        },
-                        "disabledCI": false
-                      },
-                      "ref": "frontend-builder"
-                    },
-                    {
-                      "kind": "BuildService",
-                      "spec": {
-                        "buildArguments": {},
-                        "buildFiles": {},
-                        "billing": {
-                          "buildPlan": "nf-compute-400-16"
-                        },
                         "name": "backend-builder",
                         "vcsData": {
                           "projectType": "github",
@@ -240,55 +210,6 @@
                             "configType": "default"
                           },
                           "internal": {
-                            "id": "${refs.frontend-builder.id}",
-                            "branch": "main",
-                            "buildSHA": "latest"
-                          },
-                          "releaseFlowControlled": true
-                        },
-                        "runtimeEnvironment": {},
-                        "runtimeFiles": {},
-                        "billing": {
-                          "deploymentPlan": "nf-compute-20"
-                        },
-                        "name": "dev-frontend",
-                        "ports": [
-                          {
-                            "internalPort": 8080,
-                            "public": true,
-                            "protocol": "HTTP",
-                            "name": "p01",
-                            "domains": [],
-                            "security": {
-                              "sso": {},
-                              "policies": [],
-                              "credentials": [],
-                              "verificationMode": "or"
-                            },
-                            "disableNfDomain": false
-                          }
-                        ],
-                        "tags": [
-                          "${refs.dev.id}"
-                        ]
-                      },
-                      "ref": "dev-frontend"
-                    },
-                    {
-                      "kind": "DeploymentService",
-                      "spec": {
-                        "deployment": {
-                          "instances": 1,
-                          "storage": {
-                            "ephemeralStorage": {
-                              "storageSize": 1024
-                            },
-                            "shmSize": 64
-                          },
-                          "docker": {
-                            "configType": "default"
-                          },
-                          "internal": {
                             "id": "${refs.backend-builder.id}",
                             "branch": "main",
                             "buildSHA": "latest"
@@ -331,105 +252,6 @@
                 "spec": {
                   "type": "parallel",
                   "steps": [
-                    {
-                      "kind": "Pipeline",
-                      "spec": {
-                        "stages": [
-                          {
-                            "name": "Development",
-                            "nfObjects": [
-                              {
-                                "id": "${refs.dev-frontend.id}",
-                                "type": "service"
-                              }
-                            ],
-                            "releaseFlow": {
-                              "kind": "ReleaseFlow",
-                              "spec": {
-                                "apiVersion": "v1.2",
-                                "spec": {
-                                  "kind": "Workflow",
-                                  "spec": {
-                                    "type": "sequential",
-                                    "steps": [
-                                      {
-                                        "kind": "Build",
-                                        "spec": {
-                                          "reuseExistingBuilds": true,
-                                          "buildRuleFallThroughHandling": "fail",
-                                          "buildOverrides": {
-                                            "buildArguments": {},
-                                            "buildFiles": {}
-                                          },
-                                          "id": "${template.refs.frontend-builder.id}",
-                                          "type": "service",
-                                          "branch": "${refs.simple_crud.branch}",
-                                          "sha": "${refs.simple_crud.sha}"
-                                        },
-                                        "condition": "success",
-                                        "ref": "templaterefsfrontend-builderid-build-1"
-                                      },
-                                      {
-                                        "kind": "Release",
-                                        "spec": {
-                                          "type": "build",
-                                          "origin": {
-                                            "id": "${template.refs.frontend-builder.id}",
-                                            "branch": "main",
-                                            "build": "latest"
-                                          },
-                                          "target": {
-                                            "id": "${template.refs.dev-frontend.id}",
-                                            "type": "service"
-                                          }
-                                        },
-                                        "ref": "templaterefsdev-frontendid-release-1"
-                                      }
-                                    ]
-                                  }
-                                },
-                                "triggers": [
-                                  {
-                                    "ref": "simple_crud",
-                                    "vcsService": "github",
-                                    "accountLogin": "neilmiddleton",
-                                    "repoUrl": "https://github.com/neilmiddleton/simple_crud",
-                                    "branchRestrictions": [
-                                      "main"
-                                    ],
-                                    "prRestrictions": [],
-                                    "pathIgnoreRules": [],
-                                    "ciIgnoreFlags": [
-                                      "[skip ci]",
-                                      "[ci skip]",
-                                      "[no ci]",
-                                      "[skip nf]",
-                                      "[nf skip]",
-                                      "[northflank skip]",
-                                      "[skip northflank]"
-                                    ],
-                                    "ciIgnoreFlagsEnabled": true,
-                                    "isAllowList": false,
-                                    "ignoreDrafts": false
-                                  }
-                                ],
-                                "options": {
-                                  "concurrencyPolicy": "allow"
-                                }
-                              }
-                            }
-                          },
-                          {
-                            "name": "Staging"
-                          },
-                          {
-                            "name": "Production"
-                          }
-                        ],
-                        "name": "frontend-pipeline"
-                      },
-                      "ref": "frontend-pipeline"
-                    },
                     {
                       "kind": "Pipeline",
                       "spec": {
