@@ -53,8 +53,7 @@
                         "name": "backend-builder",
                         "vcsData": {
                           "projectType": "github",
-                          "accountLogin": "neilmiddleton",
-                          "projectUrl": "https://github.com/neilmiddleton/simple_crud"
+                          "projectUrl": "https://github.com/trade-tariff/trade-tariff-backend"
                         },
                         "buildConfiguration": {
                           "prRestrictions": [],
